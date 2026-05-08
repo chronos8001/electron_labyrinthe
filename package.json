@@ -1,0 +1,57 @@
+{
+  "name": "electron-labyrinthe",
+  "version": "1.0.0",
+  "description": "Desktop application for maze creation and resolution with Electron",
+  "main": "main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron-dev .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-win-exe": "electron-builder --win --publish never"
+  },
+  "author": "Student",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^latest",
+    "electron-builder": "^latest",
+    "electron-dev": "^latest"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.1.2"
+  },
+  "build": {
+    "appId": "com.electron.labyrinthe",
+    "productName": "Electron Labyrinthe",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "src/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
