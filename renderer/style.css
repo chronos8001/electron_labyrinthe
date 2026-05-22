@@ -498,6 +498,122 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════ */
+/* Modal Labyrinth */
+/* ═══════════════════════════════════════════════════════════ */
+
+.labyrinth-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.labyrinth-canvas-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 6px;
+  min-height: 250px;
+}
+
+.labyrinth-canvas-container canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.labyrinth-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.labyrinth-controls button {
+  flex: 1;
+}
+
+.solution-info {
+  background: #e8f5e9;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #4CAF50;
+}
+
+.solution-info h4 {
+  margin-top: 0;
+  color: #2e7d32;
+}
+
+.solution-info p {
+  margin: 8px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.error {
+  color: #f44336 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
 /* Responsive */
 /* ═══════════════════════════════════════════════════════════ */
 

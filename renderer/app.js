@@ -247,14 +247,122 @@ async function loadLabyrinthList() {
 async function viewLabyrinth(id) {
   try {
     const result = await window.api.labyrinth.get(id);
-    if (result.success) {
-      // À implémenter : afficher le labyrinthe en détail
-      console.log('Labyrinth:', result.data);
-      alert('Détail du labyrinthe (à implémenter)');
+    if (result.success && result.data) {
+      const labyrinth = result.data;
+      
+      // Afficher dans un modal ou une nouvelle vue
+      const modal = document.createElement('div');
+      modal.className = 'labyrinth-modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>${labyrinth.name}</h3>
+            <button class="modal-close" onclick="this.closest('.labyrinth-modal').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div id="labyrinth-canvas-container" class="labyrinth-canvas-container"></div>
+            <div class="labyrinth-controls">
+              <button class="btn btn-primary" onclick="solveLabyrinth(${id})">Résoudre</button>
+              <button class="btn btn-secondary" onclick="this.closest('.labyrinth-modal').remove()">Fermer</button>
+            </div>
+            <div id="solution-info"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Afficher le labyrinthe
+      const container = modal.querySelector('#labyrinth-canvas-container');
+      renderMaze(labyrinth, container, 10);
     }
   } catch (error) {
     console.error(error);
+    alert('Erreur au chargement du labyrinthe');
   }
+}
+
+async function solveLabyrinth(id) {
+  try {
+    const result = await window.api.labyrinth.get(id);
+    if (result.success && result.data) {
+      const labyrinth = result.data;
+      const solveResult = await window.api.maze.solve(labyrinth);
+      
+      if (solveResult.success && solveResult.data.solvable) {
+        const solution = solveResult.data;
+        
+        // Afficher la solution
+        const container = document.querySelector('#labyrinth-canvas-container');
+        renderMazeWithSolution(labyrinth, solution, container, 10);
+        
+        // Afficher les infos
+        const infoDiv = document.querySelector('#solution-info');
+        infoDiv.innerHTML = `
+          <div class="solution-info">
+            <h4>✓ Labyrinthe résolu !</h4>
+            <p>Longueur du chemin: <strong>${solution.path.length}</strong> pas</p>
+            <p>Étapes explorees: <strong>${solution.stepsCount}</strong></p>
+          </div>
+        `;
+      } else {
+        const infoDiv = document.querySelector('#solution-info');
+        infoDiv.innerHTML = '<p class="error">Ce labyrinthe n\'a pas de solution !</p>';
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Erreur lors de la résolution');
+  }
+}
+
+function renderMazeWithSolution(maze, solution, container, cellSize = 10) {
+  const { grid, startX, startY, endX, endY, width, height } = maze;
+  const { path } = solution;
+
+  // Créer le canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = width * cellSize;
+  canvas.height = height * cellSize;
+  canvas.style.border = '1px solid #ddd';
+  canvas.style.borderRadius = '4px';
+
+  const ctx = canvas.getContext('2d');
+
+  // Couleurs
+  const colors = {
+    wall: '#333',
+    path: '#fff',
+    solution: '#FFD700',
+    start: '#4CAF50',
+    end: '#f44336'
+  };
+
+  // Dessiner les cellules
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const cell = grid[y][x];
+      const xPos = x * cellSize;
+      const yPos = y * cellSize;
+
+      // Déterminer la couleur
+      let color = colors.path;
+      if (cell === 1) color = colors.wall;
+      else if (path.some(p => p[0] === x && p[1] === y)) color = colors.solution;
+
+      ctx.fillStyle = color;
+      ctx.fillRect(xPos, yPos, cellSize, cellSize);
+    }
+  }
+
+  // Marquer start et end
+  ctx.fillStyle = colors.start;
+  ctx.fillRect(startX * cellSize, startY * cellSize, cellSize, cellSize);
+
+  ctx.fillStyle = colors.end;
+  ctx.fillRect(endX * cellSize, endY * cellSize, cellSize, cellSize);
+
+  container.innerHTML = '';
+  container.appendChild(canvas);
 }
 
 async function deleteLabyrinth(id) {
@@ -321,42 +429,79 @@ async function generatePreview() {
     const result = await window.api.maze.generate(size, difficulty);
     
     if (result.success) {
-      // Créer un canvas pour afficher le labyrinthe
-      const canvas = document.createElement('canvas');
-      canvas.width = 300;
-      canvas.height = 300;
-      
-      const ctx = canvas.getContext('2d');
-      drawLabyrinth(ctx, result.data, canvas);
-      
-      preview.innerHTML = '';
-      preview.appendChild(canvas);
+      const maze = result.data;
+      renderMaze(maze, preview, 8);
+    } else {
+      preview.innerHTML = '<p class="error">Erreur: ' + result.message + '</p>';
     }
   } catch (error) {
     console.error(error);
+    preview.innerHTML = '<p class="error">Erreur lors de la génération</p>';
   }
 }
 
-function drawLabyrinth(ctx, maze, canvas) {
-  // À implémenter : dessiner le labyrinthe sur le canvas
-  const cellSize = canvas.width / (maze.width || 10);
-  
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 1;
+function renderMaze(maze, container, cellSize = 10) {
+  const { grid, startX, startY, endX, endY, width, height } = maze;
+
+  // Créer le canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = width * cellSize;
+  canvas.height = height * cellSize;
+  canvas.style.border = '1px solid #ddd';
+  canvas.style.borderRadius = '4px';
+
+  const ctx = canvas.getContext('2d');
+
+  // Couleurs
+  const colors = {
+    wall: '#333',
+    path: '#fff',
+    start: '#4CAF50',
+    end: '#f44336'
+  };
 
   // Dessiner les cellules
-  for (let y = 0; y < (maze.height || 10); y++) {
-    for (let x = 0; x < (maze.width || 10); x++) {
-      const cell = maze.grid?.[y]?.[x];
-      if (cell && cell.wall) {
-        ctx.fillStyle = '#333';
-        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-      }
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const cell = grid[y][x];
+      const xPos = x * cellSize;
+      const yPos = y * cellSize;
+
+      // Déterminer la couleur
+      let color = colors.path;
+      if (cell === 1) color = colors.wall;
+      else if (x === startX && y === startY) color = colors.start;
+      else if (x === endX && y === endY) color = colors.end;
+
+      ctx.fillStyle = color;
+      ctx.fillRect(xPos, yPos, cellSize, cellSize);
+
+      // Bordure légère
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(xPos, yPos, cellSize, cellSize);
     }
   }
+
+  // Marquer start et end
+  ctx.fillStyle = colors.start;
+  ctx.fillRect(startX * cellSize, startY * cellSize, cellSize, cellSize);
+  ctx.fillText('S', startX * cellSize + 3, startY * cellSize + 10);
+
+  ctx.fillStyle = colors.end;
+  ctx.fillRect(endX * cellSize, endY * cellSize, cellSize, cellSize);
+  ctx.fillText('E', endX * cellSize + 3, endY * cellSize + 10);
+
+  container.innerHTML = '';
+  container.appendChild(canvas);
+
+  // Ajouter info
+  const info = document.createElement('p');
+  info.style.marginTop = '10px';
+  info.style.fontSize = '12px';
+  info.style.color = '#666';
+  info.innerHTML = `Labyrinthe ${maze.size} - Difficulté: ${maze.difficulty}/10<br>Taille: ${width}x${height}`;
+  container.appendChild(info);
 }
 
 /* ─────────────────────────────────────────────────────────── */

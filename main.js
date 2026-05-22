@@ -149,17 +149,17 @@ ipcMain.handle('labyrinth:delete', async (event, id) => {
 // ─── IPC : Génération & Résolution ──────────────────────
 ipcMain.handle('labyrinth:generate', async (event, options) => {
   try {
-    console.log('Generate labyrinth:', options);
-    return { success: false, data: null };
+    const maze = Labyrinth.generate(options.size, options.difficulty);
+    return { success: true, data: maze };
   } catch (error) {
     return { success: false, message: error.message };
   }
 });
 
-ipcMain.handle('labyrinth:solve', async (event, labyrinth) => {
+ipcMain.handle('labyrinth:solve', async (event, maze) => {
   try {
-    console.log('Solve labyrinth');
-    return { success: false, data: null };
+    const solution = Labyrinth.solve(maze);
+    return { success: true, data: solution };
   } catch (error) {
     return { success: false, message: error.message };
   }
