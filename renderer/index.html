@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electron Labyrinthe</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ─── Écran d'authentification ─────────────────────── -->
+  <div id="auth-screen" class="screen active">
+    <div class="auth-container">
+      <h1>🧩 Electron Labyrinthe</h1>
+      
+      <!-- Onglets Login/Register -->
+      <div class="auth-tabs">
+        <button id="login-tab" class="tab active" data-tab="login">Connexion</button>
+        <button id="register-tab" class="tab" data-tab="register">Inscription</button>
+      </div>
+
+      <!-- Formulaire de connexion -->
+      <form id="login-form" class="auth-form active">
+        <div class="form-group">
+          <label for="login-username">Nom d'utilisateur</label>
+          <input type="text" id="login-username" placeholder="Votre nom" required>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Mot de passe</label>
+          <input type="password" id="login-password" placeholder="Votre mot de passe" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Se connecter</button>
+        <div id="login-error" class="error-message"></div>
+      </form>
+
+      <!-- Formulaire d'inscription -->
+      <form id="register-form" class="auth-form">
+        <div class="form-group">
+          <label for="register-username">Nom d'utilisateur</label>
+          <input type="text" id="register-username" placeholder="Choisir un nom" required>
+        </div>
+        <div class="form-group">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" placeholder="votre@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="register-password">Mot de passe</label>
+          <input type="password" id="register-password" placeholder="Créer un mot de passe" required>
+        </div>
+        <div class="form-group">
+          <label for="register-password-confirm">Confirmer mot de passe</label>
+          <input type="password" id="register-password-confirm" placeholder="Confirmer le mot de passe" required>
+        </div>
+        <button type="submit" class="btn btn-primary">S'inscrire</button>
+        <div id="register-error" class="error-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ─── Écran principal ─────────────────────────────── -->
+  <div id="main-screen" class="screen">
+    <header class="header">
+      <h1>🧩 Electron Labyrinthe</h1>
+      <nav class="nav">
+        <button class="nav-btn active" data-screen="dashboard">Tableau de bord</button>
+        <button class="nav-btn" data-screen="labyrinth-list">Mes Labyrinthes</button>
+        <button class="nav-btn" data-screen="create-labyrinth">Créer</button>
+        <button class="nav-btn admin-only hidden" data-screen="admin">Admin</button>
+        <button id="logout-btn" class="nav-btn logout">Déconnexion</button>
+      </nav>
+    </header>
+
+    <main class="main-content">
+      <!-- Dashboard -->
+      <section id="dashboard" class="content-screen active">
+        <h2>Tableau de bord</h2>
+        <div class="dashboard-grid">
+          <div class="card">
+            <h3>📊 Statistiques</h3>
+            <p>Labyrinthes créés: <span id="stat-labyrinths">0</span></p>
+            <p>Labyrinthes résolus: <span id="stat-solved">0</span></p>
+          </div>
+          <div class="card">
+            <h3>⚡ Actions rapides</h3>
+            <button class="btn btn-small" onclick="switchScreen('create-labyrinth')">Créer un labyrinthe</button>
+            <button class="btn btn-small" onclick="switchScreen('labyrinth-list')">Voir mes labyrinthes</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Liste des labyrinthes -->
+      <section id="labyrinth-list" class="content-screen">
+        <h2>Mes Labyrinthes</h2>
+        <div id="labyrinths-container" class="labyrinth-grid">
+          <p class="empty">Aucun labyrinthe créé</p>
+        </div>
+      </section>
+
+      <!-- Créer un labyrinthe -->
+      <section id="create-labyrinth" class="content-screen">
+        <h2>Créer un Labyrinthe</h2>
+        <form id="create-form" class="create-form">
+          <div class="form-group">
+            <label for="maze-name">Nom du labyrinthe</label>
+            <input type="text" id="maze-name" placeholder="Donner un nom" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="maze-size">Taille</label>
+              <select id="maze-size" required>
+                <option value="small">Petite (10x10)</option>
+                <option value="medium" selected>Moyenne (20x20)</option>
+                <option value="large">Grande (30x30)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="maze-difficulty">Difficulté (1-10)</label>
+              <input type="range" id="maze-difficulty" min="1" max="10" value="5">
+              <span id="difficulty-value">5</span>
+            </div>
+          </div>
+
+          <div id="maze-preview" class="maze-preview">
+            <p>L'aperçu s'affichera ici</p>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="generatePreview()">Aperçu</button>
+            <button type="submit" class="btn btn-primary">Créer</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Admin Panel -->
+      <section id="admin" class="content-screen admin-only hidden">
+        <h2>🔐 Panneau Administrateur</h2>
+        
+        <div class="admin-tabs">
+          <button class="admin-tab active" data-admin-tab="stats">Statistiques</button>
+          <button class="admin-tab" data-admin-tab="users">Utilisateurs</button>
+        </div>
+
+        <div id="stats-tab" class="admin-tab-content active">
+          <h3>Statistiques Globales</h3>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-number" id="admin-user-count">0</span>
+              <span class="stat-label">Utilisateurs</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number" id="admin-labyrinth-count">0</span>
+              <span class="stat-label">Labyrinthes</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="users-tab" class="admin-tab-content">
+          <h3>Gestion des Utilisateurs</h3>
+          <div id="users-list" class="users-list">
+            <p class="empty">Aucun utilisateur</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
