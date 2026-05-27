@@ -89,7 +89,10 @@
 
       <!-- Liste des labyrinthes -->
       <section id="labyrinth-list" class="content-screen">
-        <h2>Mes Labyrinthes</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2>Mes Labyrinthes</h2>
+          <button class="btn btn-secondary" onclick="importLabyrinth()" style="width: auto;">📥 Importer</button>
+        </div>
         <div id="labyrinths-container" class="labyrinth-grid">
           <p class="empty">Aucun labyrinthe créé</p>
         </div>
@@ -139,6 +142,7 @@
         <div class="admin-tabs">
           <button class="admin-tab active" data-admin-tab="stats">Statistiques</button>
           <button class="admin-tab" data-admin-tab="users">Utilisateurs</button>
+          <button class="admin-tab" data-admin-tab="labyrinths">Labyrinthes</button>
         </div>
 
         <div id="stats-tab" class="admin-tab-content active">
@@ -152,6 +156,10 @@
               <span class="stat-number" id="admin-labyrinth-count">0</span>
               <span class="stat-label">Labyrinthes</span>
             </div>
+            <div class="stat-card">
+              <span class="stat-number" id="admin-solved-count">0</span>
+              <span class="stat-label">Résolus</span>
+            </div>
           </div>
         </div>
 
@@ -161,10 +169,18 @@
             <p class="empty">Aucun utilisateur</p>
           </div>
         </div>
+
+        <div id="labyrinths-tab" class="admin-tab-content">
+          <h3>Tous les Labyrinthes</h3>
+          <div id="all-labyrinths-list" class="admin-labyrinths-list">
+            <p class="empty">Aucun labyrinthe</p>
+          </div>
+        </div>
       </section>
     </main>
   </div>
 
   <script src="app.js"></script>
+  <script src="admin-features.js"></script>
 </body>
 </html>

@@ -184,10 +184,64 @@ ipcMain.handle('admin:getUsers', async (event) => {
   }
 });
 
+ipcMain.handle('admin:getAllLabyrinths', async (event) => {
+  try {
+    const labyrinths = await db.getAllLabyrinths();
+    return { success: true, data: labyrinths };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+});
+
 ipcMain.handle('admin:deleteUser', async (event, userId) => {
   try {
     const success = await db.deleteUser(userId);
     return { success, message: success ? 'Utilisateur supprimé' : 'Erreur' };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('admin:deleteLabyrinth', async (event, labyrinthId) => {
+  try {
+    const success = await db.deleteLabyrinth(labyrinthId);
+    return { success, message: success ? 'Labyrinthe supprimé' : 'Erreur' };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+});
+
+// ─── IPC : Export/Import ───────────────────────────────
+ipcMain.handle('labyrinth:export', async (event, labyrinthId) => {
+  try {
+    const labyrinth = await db.getLabyrinthById(labyrinthId);
+    if (!labyrinth) {
+      return { success: false, message: 'Labyrinthe non trouvé' };
+    }
+    return { success: true, data: JSON.stringify(labyrinth, null, 2) };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('labyrinth:import', async (event, userId, importData) => {
+  try {
+    const imported = JSON.parse(importData);
+    
+    // Validation basique
+    if (!imported.name || !imported.size || imported.difficulty === undefined) {
+      return { success: false, message: 'Format d\'import invalide' };
+    }
+
+    const labyrinthId = await db.createLabyrinth(
+      userId,
+      imported.name + ' (importé)',
+      imported.size,
+      imported.difficulty,
+      imported.maze_data || {}
+    );
+
+    return { success: true, labyrinthId };
   } catch (error) {
     return { success: false, message: error.message };
   }

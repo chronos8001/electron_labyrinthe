@@ -493,6 +493,110 @@ body {
   background: #ee5a52;
 }
 
+/* ─── Admin Labyrinths ────────────────────────────────── */
+
+.admin-labyrinths-list {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-labyrinth-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 150px;
+  gap: 15px;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+}
+
+.admin-labyrinth-item:last-child {
+  border-bottom: none;
+}
+
+.admin-labyrinth-item strong {
+  color: #333;
+}
+
+.admin-labyrinth-item .user {
+  color: #667eea;
+}
+
+.admin-labyrinth-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-labyrinth-actions button {
+  padding: 6px 10px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-view-admin {
+  background: #667eea;
+  color: white;
+}
+
+.btn-view-admin:hover {
+  background: #5568d3;
+}
+
+.btn-export {
+  background: #2196F3;
+  color: white;
+}
+
+.btn-export:hover {
+  background: #1976D2;
+}
+
+.btn-delete-admin {
+  background: #ff6b6b;
+  color: white;
+}
+
+.btn-delete-admin:hover {
+  background: #ee5a52;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* Animations */
+/* ═══════════════════════════════════════════════════════════ */
+
+@keyframes pathStep {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes solutionDraw {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.maze-solving-animation {
+  position: relative;
+}
+
+.maze-solving-step {
+  animation: pathStep 0.1s ease-out;
+}
+
 .admin-only.hidden {
   display: none;
 }

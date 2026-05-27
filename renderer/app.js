@@ -189,6 +189,8 @@ function switchAdminTab(tabName) {
 
   if (tabName === 'users') {
     loadAdminUsers();
+  } else if (tabName === 'labyrinths') {
+    loadAdminLabyrinths();
   }
 }
 
@@ -291,9 +293,9 @@ async function solveLabyrinth(id) {
       if (solveResult.success && solveResult.data.solvable) {
         const solution = solveResult.data;
         
-        // Afficher la solution
+        // Afficher la solution avec animation
         const container = document.querySelector('#labyrinth-canvas-container');
-        renderMazeWithSolution(labyrinth, solution, container, 10);
+        await solveLabyrinthAnimated(labyrinth, solution, container, 10);
         
         // Afficher les infos
         const infoDiv = document.querySelector('#solution-info');
@@ -313,6 +315,78 @@ async function solveLabyrinth(id) {
     console.error(error);
     alert('Erreur lors de la résolution');
   }
+}
+
+// ─── Animations pas à pas ─────────────────────────────
+async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) {
+  const { grid, startX, startY, endX, endY, width, height } = maze;
+  const { path } = solution;
+
+  // Créer le canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = width * cellSize;
+  canvas.height = height * cellSize;
+  canvas.style.border = '1px solid #ddd';
+  canvas.style.borderRadius = '4px';
+  canvas.className = 'maze-solving-animation';
+
+  const ctx = canvas.getContext('2d');
+
+  // Couleurs
+  const colors = {
+    wall: '#333',
+    path: '#fff',
+    exploring: '#B3E5FC',
+    solution: '#FFD700',
+    start: '#4CAF50',
+    end: '#f44336'
+  };
+
+  // Dessiner les murs et chemins d'abord
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const cell = grid[y][x];
+      const xPos = x * cellSize;
+      const yPos = y * cellSize;
+
+      let color = colors.path;
+      if (cell === 1) color = colors.wall;
+
+      ctx.fillStyle = color;
+      ctx.fillRect(xPos, yPos, cellSize, cellSize);
+    }
+  }
+
+  container.innerHTML = '';
+  container.appendChild(canvas);
+
+  // Animation du chemin pas à pas
+  for (let i = 0; i < path.length; i++) {
+    const [x, y] = path[i];
+    const xPos = x * cellSize;
+    const yPos = y * cellSize;
+
+    // Couleur selon la position
+    if (x === startX && y === startY) {
+      ctx.fillStyle = colors.start;
+    } else if (x === endX && y === endY) {
+      ctx.fillStyle = colors.end;
+    } else {
+      ctx.fillStyle = colors.solution;
+    }
+
+    ctx.fillRect(xPos, yPos, cellSize, cellSize);
+
+    // Délai entre chaque pas
+    await new Promise(resolve => setTimeout(resolve, 5));
+  }
+
+  // Marquer start et end clairement
+  ctx.fillStyle = colors.start;
+  ctx.fillRect(startX * cellSize, startY * cellSize, cellSize, cellSize);
+
+  ctx.fillStyle = colors.end;
+  ctx.fillRect(endX * cellSize, endY * cellSize, cellSize, cellSize);
 }
 
 function renderMazeWithSolution(maze, solution, container, cellSize = 10) {
@@ -513,8 +587,9 @@ async function loadAdminPanel() {
     const result = await window.api.admin.getStatistics();
     
     if (result.success) {
-      document.getElementById('admin-user-count').textContent = result.data.userCount || 0;
-      document.getElementById('admin-labyrinth-count').textContent = result.data.labyrinthCount || 0;
+      document.getElementById('admin-user-count').textContent = result.data.totalUsers || 0;
+      document.getElementById('admin-labyrinth-count').textContent = result.data.totalLabyrinths || 0;
+      document.getElementById('admin-solved-count').textContent = result.data.solvedCount || 0;
     }
   } catch (error) {
     console.error(error);
@@ -532,15 +607,51 @@ async function loadAdminUsers() {
         <div class="user-item">
           <div class="user-info">
             <h4>${user.username}</h4>
-            <p>${user.email} • Rôle: ${user.role}</p>
+            <p>ID: ${user.id} • Rôle: ${user.is_admin ? 'Admin' : 'Utilisateur'}</p>
           </div>
           <div class="user-actions">
-            <button class="btn-delete" onclick="deleteUserAdmin('${user.id}')">Supprimer</button>
+            <button class="btn-delete" onclick="deleteUserAdmin(${user.id})">Supprimer</button>
           </div>
         </div>
       `).join('');
     } else {
       container.innerHTML = '<p class="empty">Aucun utilisateur</p>';
+    }
+  } catch (error) {
+    container.innerHTML = '<p class="empty">Erreur au chargement</p>';
+    console.error(error);
+  }
+}
+
+async function loadAdminLabyrinths() {
+  const container = document.getElementById('all-labyrinths-list');
+
+  try {
+    const result = await window.api.admin.getAllLabyrinths();
+    
+    if (result.success && result.data && result.data.length > 0) {
+      container.innerHTML = result.data.map(lab => `
+        <div class="admin-labyrinth-item">
+          <div>
+            <strong>${lab.name}</strong>
+            <p class="user">par ${lab.username}</p>
+          </div>
+          <div>
+            <strong>${lab.size}</strong>
+            <p>Difficulté: ${lab.difficulty}/10</p>
+          </div>
+          <div>
+            <small>${new Date(lab.created_at).toLocaleDateString('fr-FR')}</small>
+          </div>
+          <div class="admin-labyrinth-actions">
+            <button class="btn-view-admin" onclick="viewLabyrinthAdmin(${lab.id})">Voir</button>
+            <button class="btn-export" onclick="exportLabyrinth(${lab.id})">Export</button>
+            <button class="btn-delete-admin" onclick="deleteLabyrinthAdmin(${lab.id})">Supprimer</button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      container.innerHTML = '<p class="empty">Aucun labyrinthe</p>';
     }
   } catch (error) {
     container.innerHTML = '<p class="empty">Erreur au chargement</p>';

@@ -38,9 +38,23 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('admin:getStatistics'),
     getUsers: () => 
       ipcRenderer.invoke('admin:getUsers'),
+    getAllLabyrinths: () => 
+      ipcRenderer.invoke('admin:getAllLabyrinths'),
     deleteUser: (userId) => 
-      ipcRenderer.invoke('admin:deleteUser', userId)
+      ipcRenderer.invoke('admin:deleteUser', userId),
+    deleteLabyrinth: (labyrinthId) => 
+      ipcRenderer.invoke('admin:deleteLabyrinth', labyrinthId)
   },
+
+  // ─── Export/Import ────────────────────────
+  export: {
+    labyrinth: (labyrinthId) => 
+      ipcRenderer.invoke('labyrinth:export', labyrinthId)
+  },
+  import: {
+    labyrinth: (userId, data) => 
+      ipcRenderer.invoke('labyrinth:import', userId, data)
+  }
 
   // ─── Événements du renderer ───────────────
   onNotification: (callback) => 
