@@ -86,12 +86,21 @@ class Database {
           size TEXT NOT NULL,
           difficulty INTEGER NOT NULL,
           maze_data TEXT NOT NULL,
+          solved INTEGER DEFAULT 0,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
       `);
       console.log('✓ Labyrinths table created');
+      
+      // Add solved column if it doesn't exist (migration for existing databases)
+      try {
+        await this.run('ALTER TABLE labyrinths ADD COLUMN solved INTEGER DEFAULT 0');
+        console.log('✓ Added solved column to labyrinths');
+      } catch (e) {
+        // Column already exists, ignore error
+      }
 
       // Create default admin user if not exists
       const admin = await this.get('SELECT * FROM users WHERE username = ?', ['admin']);
@@ -305,6 +314,20 @@ class Database {
    * @param {number} labyrinthId - Labyrinth ID
    * @param {object} updates - Object with fields to update
    */
+  async markLabyrinthAsSolved(labyrinthId) {
+    try {
+      await this.run(
+        'UPDATE labyrinths SET solved = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [labyrinthId]
+      );
+      console.log(`Labyrinth ${labyrinthId} marked as solved`);
+      return true;
+    } catch (error) {
+      console.error('Error marking labyrinth as solved:', error);
+      throw error;
+    }
+  }
+
   async updateLabyrinth(labyrinthId, updates) {
     try {
       let updateQuery = 'UPDATE labyrinths SET ';

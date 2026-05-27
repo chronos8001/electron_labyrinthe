@@ -249,8 +249,10 @@ async function loadLabyrinthList() {
 async function viewLabyrinth(id) {
   try {
     const result = await window.api.labyrinth.get(id);
+    console.log('Labyrinth data:', result); // Debug
     if (result.success && result.data) {
       const labyrinth = result.data;
+      console.log('Labyrinth object:', labyrinth); // Debug
       
       // Afficher dans un modal ou une nouvelle vue
       const modal = document.createElement('div');
@@ -258,7 +260,8 @@ async function viewLabyrinth(id) {
       modal.innerHTML = `
         <div class="modal-content">
           <div class="modal-header">
-            <h3>${labyrinth.name}</h3>
+            <h3>${labyrinth.name || 'Sans nom'} - Difficulté: ${labyrinth.difficulty || '?'}/10</h3>
+            <h4>Taille: ${labyrinth.size || '?'}</h4>
             <button class="modal-close" onclick="this.closest('.labyrinth-modal').remove()">✕</button>
           </div>
           <div class="modal-body">
@@ -275,7 +278,12 @@ async function viewLabyrinth(id) {
       
       // Afficher le labyrinthe
       const container = modal.querySelector('#labyrinth-canvas-container');
-      renderMaze(labyrinth, container, 10);
+      if (labyrinth.maze_data && labyrinth.maze_data.grid) {
+        renderMaze(labyrinth.maze_data, container, 10);
+      } else {
+        container.innerHTML = '<p class="error">Données de labyrinthe invalides</p>';
+        console.error('Invalid maze data:', labyrinth.maze_data);
+      }
     }
   } catch (error) {
     console.error(error);
@@ -288,14 +296,14 @@ async function solveLabyrinth(id) {
     const result = await window.api.labyrinth.get(id);
     if (result.success && result.data) {
       const labyrinth = result.data;
-      const solveResult = await window.api.maze.solve(labyrinth);
+      const solveResult = await window.api.maze.solve(id, labyrinth.maze_data);
       
       if (solveResult.success && solveResult.data.solvable) {
         const solution = solveResult.data;
         
         // Afficher la solution avec animation
         const container = document.querySelector('#labyrinth-canvas-container');
-        await solveLabyrinthAnimated(labyrinth, solution, container, 10);
+        await solveLabyrinthAnimated(labyrinth.maze_data, solution, container, 10);
         
         // Afficher les infos
         const infoDiv = document.querySelector('#solution-info');
@@ -306,6 +314,9 @@ async function solveLabyrinth(id) {
             <p>Étapes explorees: <strong>${solution.stepsCount}</strong></p>
           </div>
         `;
+        
+        // Rafraîchir la liste
+        setTimeout(() => loadLabyrinthList(), 500);
       } else {
         const infoDiv = document.querySelector('#solution-info');
         infoDiv.innerHTML = '<p class="error">Ce labyrinthe n\'a pas de solution !</p>';
@@ -468,12 +479,20 @@ async function handleCreateLabyrinth(e) {
   const difficulty = parseInt(document.getElementById('maze-difficulty').value);
 
   try {
+    // Generate the maze data
+    const generateResult = await window.api.maze.generate(size, difficulty);
+    
+    if (!generateResult.success) {
+      alert('Erreur: ' + generateResult.message);
+      return;
+    }
+
     const result = await window.api.labyrinth.create({
       name,
       size,
       difficulty,
       userId: currentUser.id,
-      data: {}
+      data: generateResult.data
     });
 
     if (result.success) {

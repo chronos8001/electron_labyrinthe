@@ -95,7 +95,8 @@ async function viewLabyrinthAdmin(id) {
       modal.innerHTML = `
         <div class="modal-content">
           <div class="modal-header">
-            <h3>${labyrinth.name}</h3>
+            <h3>${labyrinth.name || 'Sans nom'} - Difficulté: ${labyrinth.difficulty || '?'}/10</h3>
+            <h4>Taille: ${labyrinth.size || '?'}</h4>
             <button class="modal-close" onclick="this.closest('.labyrinth-modal').remove()">✕</button>
           </div>
           <div class="modal-body">
@@ -111,7 +112,11 @@ async function viewLabyrinthAdmin(id) {
       document.body.appendChild(modal);
       
       const container = modal.querySelector('#admin-labyrinth-canvas');
-      renderMaze(labyrinth, container, 10);
+      if (labyrinth.maze_data && labyrinth.maze_data.grid) {
+        renderMaze(labyrinth.maze_data, container, 10);
+      } else {
+        container.innerHTML = '<p class="error">Données de labyrinthe invalides</p>';
+      }
     }
   } catch (error) {
     console.error(error);
@@ -124,12 +129,12 @@ async function solveLabyrinthAdmin(id) {
     const result = await window.api.labyrinth.get(id);
     if (result.success && result.data) {
       const labyrinth = result.data;
-      const solveResult = await window.api.maze.solve(labyrinth);
+      const solveResult = await window.api.maze.solve(id, labyrinth.maze_data);
       
       if (solveResult.success && solveResult.data.solvable) {
         const solution = solveResult.data;
         const container = document.querySelector('#admin-labyrinth-canvas');
-        await solveLabyrinthAnimated(labyrinth, solution, container, 10);
+        await solveLabyrinthAnimated(labyrinth.maze_data, solution, container, 10);
         
         const infoDiv = document.querySelector('#admin-solution-info');
         infoDiv.innerHTML = `
@@ -139,6 +144,9 @@ async function solveLabyrinthAdmin(id) {
             <p>Étapes explorees: <strong>${solution.stepsCount}</strong></p>
           </div>
         `;
+        
+        // Rafraîchir la liste admin
+        setTimeout(() => loadAdminLabyrinths(), 500);
       }
     }
   } catch (error) {

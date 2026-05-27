@@ -28,8 +28,8 @@ contextBridge.exposeInMainWorld('api', {
   maze: {
     generate: (size, difficulty) => 
       ipcRenderer.invoke('labyrinth:generate', { size, difficulty }),
-    solve: (labyrinth) => 
-      ipcRenderer.invoke('labyrinth:solve', labyrinth)
+    solve: (labyrinthId, maze) => 
+      ipcRenderer.invoke('labyrinth:solve', labyrinthId, maze)
   },
 
   // ─── Admin ────────────────────────────────
@@ -54,7 +54,7 @@ contextBridge.exposeInMainWorld('api', {
   import: {
     labyrinth: (userId, data) => 
       ipcRenderer.invoke('labyrinth:import', userId, data)
-  }
+  },
 
   // ─── Événements du renderer ───────────────
   onNotification: (callback) => 

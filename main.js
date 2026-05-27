@@ -156,9 +156,15 @@ ipcMain.handle('labyrinth:generate', async (event, options) => {
   }
 });
 
-ipcMain.handle('labyrinth:solve', async (event, maze) => {
+ipcMain.handle('labyrinth:solve', async (event, labyrinthId, maze) => {
   try {
     const solution = Labyrinth.solve(maze);
+    
+    // Mark labyrinth as solved
+    if (labyrinthId) {
+      await db.markLabyrinthAsSolved(labyrinthId);
+    }
+    
     return { success: true, data: solution };
   } catch (error) {
     return { success: false, message: error.message };
