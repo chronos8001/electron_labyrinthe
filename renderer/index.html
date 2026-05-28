@@ -7,18 +7,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ─── Écran d'authentification ─────────────────────── -->
+
   <div id="auth-screen" class="screen active">
     <div class="auth-container">
-      <h1>🧩 Electron Labyrinthe</h1>
+      <h1>Electron Labyrinthe</h1>
       
-      <!-- Onglets Login/Register -->
       <div class="auth-tabs">
         <button id="login-tab" class="tab active" data-tab="login">Connexion</button>
         <button id="register-tab" class="tab" data-tab="register">Inscription</button>
       </div>
 
-      <!-- Formulaire de connexion -->
       <form id="login-form" class="auth-form active">
         <div class="form-group">
           <label for="login-username">Nom d'utilisateur</label>
@@ -32,7 +30,6 @@
         <div id="login-error" class="error-message"></div>
       </form>
 
-      <!-- Formulaire d'inscription -->
       <form id="register-form" class="auth-form">
         <div class="form-group">
           <label for="register-username">Nom d'utilisateur</label>
@@ -56,10 +53,9 @@
     </div>
   </div>
 
-  <!-- ─── Écran principal ─────────────────────────────── -->
   <div id="main-screen" class="screen">
     <header class="header">
-      <h1>🧩 Electron Labyrinthe</h1>
+      <h1>Electron Labyrinthe</h1>
       <nav class="nav">
         <button class="nav-btn active" data-screen="dashboard">Tableau de bord</button>
         <button class="nav-btn" data-screen="labyrinth-list">Mes Labyrinthes</button>
@@ -70,35 +66,32 @@
     </header>
 
     <main class="main-content">
-      <!-- Dashboard -->
       <section id="dashboard" class="content-screen active">
         <h2>Tableau de bord</h2>
         <div class="dashboard-grid">
           <div class="card">
-            <h3>📊 Statistiques</h3>
+            <h3>Statistiques</h3>
             <p>Labyrinthes créés: <span id="stat-labyrinths">0</span></p>
             <p>Labyrinthes résolus: <span id="stat-solved">0</span></p>
           </div>
           <div class="card">
-            <h3>⚡ Actions rapides</h3>
+            <h3>Actions rapides</h3>
             <button class="btn btn-small" onclick="switchScreen('create-labyrinth')">Créer un labyrinthe</button>
             <button class="btn btn-small" onclick="switchScreen('labyrinth-list')">Voir mes labyrinthes</button>
           </div>
         </div>
       </section>
 
-      <!-- Liste des labyrinthes -->
       <section id="labyrinth-list" class="content-screen">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <h2>Mes Labyrinthes</h2>
-          <button class="btn btn-secondary" onclick="importLabyrinth()" style="width: auto;">📥 Importer</button>
+          <button class="btn btn-secondary" onclick="importLabyrinth()" style="width: auto;">Importer</button>
         </div>
         <div id="labyrinths-container" class="labyrinth-grid">
           <p class="empty">Aucun labyrinthe créé</p>
         </div>
       </section>
 
-      <!-- Créer un labyrinthe -->
       <section id="create-labyrinth" class="content-screen">
         <h2>Créer un Labyrinthe</h2>
         <form id="create-form" class="create-form">
@@ -135,9 +128,8 @@
         </form>
       </section>
 
-      <!-- Admin Panel -->
       <section id="admin" class="content-screen admin-only hidden">
-        <h2>🔐 Panneau Administrateur</h2>
+        <h2>Panneau Administrateur</h2>
         
         <div class="admin-tabs">
           <button class="admin-tab active" data-admin-tab="stats">Statistiques</button>
