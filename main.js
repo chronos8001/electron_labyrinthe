@@ -9,6 +9,17 @@ let mainWindow;
 let db;
 let auth;
 
+// Fonction helper pour vérifier si l'utilisateur est admin
+async function isUserAdmin(userId) {
+  try {
+    const user = await db.getUserById(userId);
+    return user && user.is_admin === 1;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -165,8 +176,14 @@ ipcMain.handle('labyrinth:solve', async (event, labyrinthId, maze) => {
 });
 
 
-ipcMain.handle('admin:getStatistics', async (event) => {
+ipcMain.handle('admin:getStatistics', async (event, params) => {
   try {
+    const { userId } = params;
+    
+    if (!userId || !(await isUserAdmin(userId))) {
+      return { success: false, message: 'Accès refusé. Vous devez être administrateur.' };
+    }
+    
     const stats = await db.getDetailedStatistics();
     return { success: true, data: stats };
   } catch (error) {
@@ -174,8 +191,14 @@ ipcMain.handle('admin:getStatistics', async (event) => {
   }
 });
 
-ipcMain.handle('admin:getUsers', async (event) => {
+ipcMain.handle('admin:getUsers', async (event, params) => {
   try {
+    const { userId } = params;
+    
+    if (!userId || !(await isUserAdmin(userId))) {
+      return { success: false, message: 'Accès refusé. Vous devez être administrateur.' };
+    }
+    
     const users = await db.getAllUsers();
     return { success: true, data: users };
   } catch (error) {
@@ -183,8 +206,14 @@ ipcMain.handle('admin:getUsers', async (event) => {
   }
 });
 
-ipcMain.handle('admin:getAllLabyrinths', async (event) => {
+ipcMain.handle('admin:getAllLabyrinths', async (event, params) => {
   try {
+    const { userId } = params;
+    
+    if (!userId || !(await isUserAdmin(userId))) {
+      return { success: false, message: 'Accès refusé. Vous devez être administrateur.' };
+    }
+    
     const labyrinths = await db.getAllLabyrinths();
     return { success: true, data: labyrinths };
   } catch (error) {
@@ -192,19 +221,77 @@ ipcMain.handle('admin:getAllLabyrinths', async (event) => {
   }
 });
 
-ipcMain.handle('admin:deleteUser', async (event, userId) => {
+ipcMain.handle('admin:deleteUser', async (event, params) => {
   try {
-    const success = await db.deleteUser(userId);
+    const { userId, targetUserId } = params;
+    
+    if (!userId || !(await isUserAdmin(userId))) {
+      return { success: false, message: 'Accès refusé. Vous devez être administrateur.' };
+    }
+    
+    // Empêcher un admin de se supprimer lui-même
+    if (userId === targetUserId) {
+      return { success: false, message: 'Vous ne pouvez pas vous supprimer vous-même' };
+    }
+    
+    const success = await db.deleteUser(targetUserId);
     return { success, message: success ? 'Utilisateur supprimé' : 'Erreur' };
   } catch (error) {
     return { success: false, message: error.message };
   }
 });
 
-ipcMain.handle('admin:deleteLabyrinth', async (event, labyrinthId) => {
+ipcMain.handle('admin:deleteLabyrinth', async (event, params) => {
   try {
+    const { userId, labyrinthId } = params;
+    
+    if (!userId || !(await isUserAdmin(userId))) {
+      return { success: false, message: 'Accès refusé. Vous devez être administrateur.' };
+    }
+    
     const success = await db.deleteLabyrinth(labyrinthId);
     return { success, message: success ? 'Labyrinthe supprimé' : 'Erreur' };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('admin:createUser', async (event, params) => {
+  try {
+    const { userId, username, email, password, isAdmin } = params;
+    
+    if (!userId || !(await isUserAdmin(userId))) {
+      return { success: false, message: 'Accès refusé. Vous devez être administrateur.' };
+    }
+    
+    const result = await auth.register(username, email, password);
+    
+    if (result.success && isAdmin) {
+      await db.updateUserRole(result.user.id, 1);
+      result.user.role = 'admin';
+    }
+    
+    return result;
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('admin:updateUserRole', async (event, params) => {
+  try {
+    const { userId, targetUserId, isAdmin } = params;
+    
+    if (!userId || !(await isUserAdmin(userId))) {
+      return { success: false, message: 'Accès refusé. Vous devez être administrateur.' };
+    }
+    
+    // Empêcher un admin de se retirer les droits admin
+    if (userId === targetUserId && !isAdmin) {
+      return { success: false, message: 'Vous ne pouvez pas vous retirer vos droits admin' };
+    }
+    
+    const success = await db.updateUserRole(targetUserId, isAdmin ? 1 : 0);
+    return { success, message: success ? 'Rôle mis à jour' : 'Erreur' };
   } catch (error) {
     return { success: false, message: error.message };
   }

@@ -341,8 +341,13 @@ class Database {
         'SELECT size, COUNT(*) as count FROM labyrinths GROUP BY size'
       );
 
+      const solvedResult = await this.get(
+        'SELECT COUNT(*) as count FROM labyrinths WHERE solved = 1'
+      );
+
       return {
         ...stats,
+        solvedCount: solvedResult.count,
         difficultyDistribution,
         sizeDistribution
       };
