@@ -131,10 +131,13 @@ function switchToMainScreen() {
 
   
   const adminBtn = document.querySelector('[data-screen="admin"]');
+  const adminSection = document.getElementById('admin');
   if (currentUser && currentUser.role === 'admin') {
     adminBtn.classList.remove('hidden');
+    adminSection.classList.remove('hidden');
   } else {
     adminBtn.classList.add('hidden');
+    adminSection.classList.add('hidden');
   }
 }
 function switchScreen(screenId) {
