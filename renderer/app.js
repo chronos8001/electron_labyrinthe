@@ -138,18 +138,24 @@ function switchToMainScreen() {
   }
 }
 function switchScreen(screenId) {
+  // Vérifier si c'est une tentative d'accès au panel admin
+  if (screenId === 'admin' && (!currentUser || currentUser.role !== 'admin')) {
+    alert('Accès refusé. Seuls les administrateurs peuvent accéder au panel admin.');
+    return;
+  }
   
+  // Basculer l'état actif du bouton nav
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.screen === screenId);
   });
 
-  
+  // Masquer tous les écrans et afficher celui demandé
   document.querySelectorAll('.content-screen').forEach(screen => {
     screen.classList.remove('active');
   });
   document.getElementById(screenId).classList.add('active');
 
-  
+  // Charger les données appropriées
   if (screenId === 'dashboard') {
     loadDashboard();
   } else if (screenId === 'labyrinth-list') {
@@ -205,6 +211,7 @@ async function loadLabyrinthList() {
           <p>État: ${labyrinth.solved ? '✓ Résolu' : '✗ Non résolu'}</p>
           <div class="actions">
             <button class="btn btn-small" onclick="viewLabyrinth('${labyrinth.id}')">Voir</button>
+            <button class="btn btn-small" onclick="editLabyrinthName('${labyrinth.id}', '${labyrinth.name}')">Renommer</button>
             <button class="btn btn-small" onclick="deleteLabyrinth('${labyrinth.id}')">Supprimer</button>
           </div>
         </div>
@@ -436,6 +443,27 @@ async function deleteLabyrinth(id) {
     }
   } catch (error) {
     console.error(error);
+  }
+}
+
+async function editLabyrinthName(id, currentName) {
+  const newName = prompt('Nouveau nom du labyrinthe:', currentName);
+  
+  if (newName === null || newName.trim() === '') {
+    return;
+  }
+
+  try {
+    const result = await window.api.labyrinth.update(id, { name: newName });
+    if (result.success) {
+      alert('Labyrinthe renommé avec succès !');
+      loadLabyrinthList();
+    } else {
+      alert('Erreur: ' + result.message);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Erreur lors de la modification');
   }
 }
 

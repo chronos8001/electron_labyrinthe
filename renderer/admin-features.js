@@ -1,14 +1,25 @@
 async function loadAdminPanel() {
   try {
-    const result = await window.api.admin.getStatistics();
+    console.log('Loading admin panel for user:', currentUser.id);
+    
+    const result = await window.api.admin.getStatistics(currentUser.id);
     
     if (result.success) {
+      console.log('Statistics loaded:', result.data);
       document.getElementById('admin-user-count').textContent = result.data.totalUsers || 0;
       document.getElementById('admin-labyrinth-count').textContent = result.data.totalLabyrinths || 0;
       document.getElementById('admin-solved-count').textContent = result.data.solvedCount || 0;
+      
+      // Charger aussi les onglets utilisateurs et labyrinthes
+      await loadAdminUsers();
+      await loadAdminLabyrinths();
+    } else {
+      console.error('Error loading statistics:', result.message);
+      alert('Erreur: ' + result.message);
     }
   } catch (error) {
-    console.error(error);
+    console.error('Error in loadAdminPanel:', error);
+    alert('Erreur d\'accès au panel admin: ' + error.message);
   }
 }
 
@@ -16,9 +27,17 @@ async function loadAdminUsers() {
   const container = document.getElementById('users-list');
 
   try {
-    const result = await window.api.admin.getUsers();
+    console.log('Loading admin users for user:', currentUser.id);
+    const result = await window.api.admin.getUsers(currentUser.id);
     
-    if (result.success && result.data && result.data.length > 0) {
+    console.log('Users loaded:', result);
+    
+    if (!result.success) {
+      container.innerHTML = '<p class="error">Erreur: ' + result.message + '</p>';
+      return;
+    }
+    
+    if (result.data && result.data.length > 0) {
       container.innerHTML = result.data.map(user => `
         <div class="user-item">
           <div class="user-info">
@@ -26,6 +45,9 @@ async function loadAdminUsers() {
             <p>ID: ${user.id} • Rôle: ${user.is_admin ? 'Admin' : 'Utilisateur'}</p>
           </div>
           <div class="user-actions">
+            <button class="btn-role" onclick="toggleUserRole(${user.id}, ${user.is_admin})">
+              ${user.is_admin ? 'Rétrograder' : 'Promouvoir'}
+            </button>
             <button class="btn-delete" onclick="deleteUserAdmin(${user.id})">Supprimer</button>
           </div>
         </div>
@@ -34,8 +56,8 @@ async function loadAdminUsers() {
       container.innerHTML = '<p class="empty">Aucun utilisateur</p>';
     }
   } catch (error) {
-    container.innerHTML = '<p class="empty">Erreur au chargement</p>';
-    console.error(error);
+    console.error('Error in loadAdminUsers:', error);
+    container.innerHTML = '<p class="error">Erreur: ' + error.message + '</p>';
   }
 }
 
@@ -43,9 +65,17 @@ async function loadAdminLabyrinths() {
   const container = document.getElementById('all-labyrinths-list');
 
   try {
-    const result = await window.api.admin.getAllLabyrinths();
+    console.log('Loading all labyrinths for admin user:', currentUser.id);
+    const result = await window.api.admin.getAllLabyrinths(currentUser.id);
     
-    if (result.success && result.data && result.data.length > 0) {
+    console.log('Labyrinths loaded:', result);
+    
+    if (!result.success) {
+      container.innerHTML = '<p class="error">Erreur: ' + result.message + '</p>';
+      return;
+    }
+    
+    if (result.data && result.data.length > 0) {
       container.innerHTML = result.data.map(lab => `
         <div class="admin-labyrinth-item">
           <div>
@@ -70,8 +100,8 @@ async function loadAdminLabyrinths() {
       container.innerHTML = '<p class="empty">Aucun labyrinthe</p>';
     }
   } catch (error) {
-    container.innerHTML = '<p class="empty">Erreur au chargement</p>';
-    console.error(error);
+    console.error('Error in loadAdminLabyrinths:', error);
+    container.innerHTML = '<p class="error">Erreur: ' + error.message + '</p>';
   }
 }
 
@@ -152,7 +182,7 @@ async function deleteLabyrinthAdmin(id) {
   }
 
   try {
-    const result = await window.api.admin.deleteLabyrinth(id);
+    const result = await window.api.admin.deleteLabyrinth(currentUser.id, id);
     if (result.success) {
       loadAdminLabyrinths();
       alert('Labyrinthe supprimé');
@@ -170,7 +200,7 @@ async function deleteUserAdmin(userId) {
   }
 
   try {
-    const result = await window.api.admin.deleteUser(userId);
+    const result = await window.api.admin.deleteUser(currentUser.id, userId);
     if (result.success) {
       loadAdminUsers();
       alert('Utilisateur supprimé');
@@ -305,4 +335,70 @@ function importLabyrinth() {
   };
   
   input.click();
+}
+
+function showCreateUserForm() {
+  document.getElementById('create-user-form-container').style.display = 'block';
+}
+
+function hideCreateUserForm() {
+  document.getElementById('create-user-form-container').style.display = 'none';
+  document.getElementById('new-user-username').value = '';
+  document.getElementById('new-user-email').value = '';
+  document.getElementById('new-user-password').value = '';
+  document.getElementById('new-user-admin').checked = false;
+}
+
+async function createNewUser() {
+  const username = document.getElementById('new-user-username').value;
+  const email = document.getElementById('new-user-email').value;
+  const password = document.getElementById('new-user-password').value;
+  const isAdmin = document.getElementById('new-user-admin').checked;
+
+  if (!username || !email || !password) {
+    alert('Tous les champs sont obligatoires');
+    return;
+  }
+
+  try {
+    const result = await window.api.admin.createUser(currentUser.id, {
+      username,
+      email,
+      password,
+      isAdmin
+    });
+
+    if (result.success) {
+      alert('Utilisateur créé avec succès !');
+      hideCreateUserForm();
+      loadAdminUsers();
+    } else {
+      alert('Erreur: ' + result.message);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Erreur lors de la création');
+  }
+}
+
+async function toggleUserRole(userId, isCurrentlyAdmin) {
+  const action = isCurrentlyAdmin ? 'rétrograder' : 'promouvoir';
+  
+  if (!confirm(`Êtes-vous sûr de vouloir ${action} cet utilisateur ?`)) {
+    return;
+  }
+
+  try {
+    const result = await window.api.admin.updateUserRole(currentUser.id, userId, !isCurrentlyAdmin);
+
+    if (result.success) {
+      alert('Rôle utilisateur mis à jour !');
+      loadAdminUsers();
+    } else {
+      alert('Erreur: ' + result.message);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Erreur lors de la mise à jour');
+  }
 }

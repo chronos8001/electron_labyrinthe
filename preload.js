@@ -31,16 +31,20 @@ contextBridge.exposeInMainWorld('api', {
 
   
   admin: {
-    getStatistics: () => 
-      ipcRenderer.invoke('admin:getStatistics'),
-    getUsers: () => 
-      ipcRenderer.invoke('admin:getUsers'),
-    getAllLabyrinths: () => 
-      ipcRenderer.invoke('admin:getAllLabyrinths'),
-    deleteUser: (userId) => 
-      ipcRenderer.invoke('admin:deleteUser', userId),
-    deleteLabyrinth: (labyrinthId) => 
-      ipcRenderer.invoke('admin:deleteLabyrinth', labyrinthId)
+    getStatistics: (userId) => 
+      ipcRenderer.invoke('admin:getStatistics', { userId }),
+    getUsers: (userId) => 
+      ipcRenderer.invoke('admin:getUsers', { userId }),
+    getAllLabyrinths: (userId) => 
+      ipcRenderer.invoke('admin:getAllLabyrinths', { userId }),
+    deleteUser: (userId, targetUserId) => 
+      ipcRenderer.invoke('admin:deleteUser', { userId, targetUserId }),
+    deleteLabyrinth: (userId, labyrinthId) => 
+      ipcRenderer.invoke('admin:deleteLabyrinth', { userId, labyrinthId }),
+    createUser: (userId, userData) => 
+      ipcRenderer.invoke('admin:createUser', { userId, ...userData }),
+    updateUserRole: (userId, targetUserId, isAdmin) => 
+      ipcRenderer.invoke('admin:updateUserRole', { userId, targetUserId, isAdmin })
   },
 
   
