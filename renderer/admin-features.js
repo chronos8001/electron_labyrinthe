@@ -1,11 +1,3 @@
-/* ═══════════════════════════════════════════════════════════ */
-/* Admin Panel & Advanced Features */
-/* ═══════════════════════════════════════════════════════════ */
-
-/* ─────────────────────────────────────────────────────────── */
-/* Admin Panel */
-/* ─────────────────────────────────────────────────────────── */
-
 async function loadAdminPanel() {
   try {
     const result = await window.api.admin.getStatistics();
@@ -89,7 +81,7 @@ async function viewLabyrinthAdmin(id) {
     if (result.success && result.data) {
       const labyrinth = result.data;
       
-      // Afficher dans un modal
+      
       const modal = document.createElement('div');
       modal.className = 'labyrinth-modal';
       modal.innerHTML = `
@@ -145,7 +137,7 @@ async function solveLabyrinthAdmin(id) {
           </div>
         `;
         
-        // Rafraîchir la liste admin
+        
         setTimeout(() => loadAdminLabyrinths(), 500);
       }
     }
@@ -189,16 +181,11 @@ async function deleteUserAdmin(userId) {
     console.error(error);
   }
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* Animations pas à pas */
-/* ─────────────────────────────────────────────────────────── */
-
 async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) {
   const { grid, startX, startY, endX, endY, width, height } = maze;
   const { path } = solution;
 
-  // Créer le canvas
+  
   const canvas = document.createElement('canvas');
   canvas.width = width * cellSize;
   canvas.height = height * cellSize;
@@ -208,7 +195,7 @@ async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) 
 
   const ctx = canvas.getContext('2d');
 
-  // Couleurs
+  
   const colors = {
     wall: '#333',
     path: '#fff',
@@ -218,7 +205,7 @@ async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) 
     end: '#f44336'
   };
 
-  // Dessiner les murs et chemins d'abord
+  
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const cell = grid[y][x];
@@ -236,13 +223,13 @@ async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) 
   container.innerHTML = '';
   container.appendChild(canvas);
 
-  // Animation du chemin pas à pas
+  
   for (let i = 0; i < path.length; i++) {
     const [x, y] = path[i];
     const xPos = x * cellSize;
     const yPos = y * cellSize;
 
-    // Couleur selon la position
+    
     if (x === startX && y === startY) {
       ctx.fillStyle = colors.start;
     } else if (x === endX && y === endY) {
@@ -253,27 +240,22 @@ async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) 
 
     ctx.fillRect(xPos, yPos, cellSize, cellSize);
 
-    // Délai entre chaque pas (5ms pour voir l'animation)
+    
     await new Promise(resolve => setTimeout(resolve, 5));
   }
 
-  // Marquer start et end clairement à la fin
+  
   ctx.fillStyle = colors.start;
   ctx.fillRect(startX * cellSize, startY * cellSize, cellSize, cellSize);
 
   ctx.fillStyle = colors.end;
   ctx.fillRect(endX * cellSize, endY * cellSize, cellSize, cellSize);
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* Export/Import */
-/* ─────────────────────────────────────────────────────────── */
-
 async function exportLabyrinth(id) {
   try {
     const result = await window.api.export.labyrinth(id);
     if (result.success) {
-      // Créer un fichier de téléchargement
+      
       const blob = new Blob([result.data], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

@@ -1,12 +1,4 @@
-/* ═══════════════════════════════════════════════════════════ */
-/* Application Renderer - Logique cliente */
-/* ═══════════════════════════════════════════════════════════ */
-
 let currentUser = null;
-
-/* ─────────────────────────────────────────────────────────── */
-/* Initialisation */
-/* ─────────────────────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeEventListeners();
@@ -14,14 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeEventListeners() {
-  // Authentification
+  
   document.getElementById('login-tab').addEventListener('click', () => switchAuthTab('login'));
   document.getElementById('register-tab').addEventListener('click', () => switchAuthTab('register'));
 
   document.getElementById('login-form').addEventListener('submit', handleLogin);
   document.getElementById('register-form').addEventListener('submit', handleRegister);
 
-  // Navigation principale
+  
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const screen = e.target.dataset.screen;
@@ -31,22 +23,17 @@ function initializeEventListeners() {
 
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
 
-  // Création de labyrinthe
+  
   document.getElementById('create-form').addEventListener('submit', handleCreateLabyrinth);
   document.getElementById('maze-difficulty').addEventListener('input', (e) => {
     document.getElementById('difficulty-value').textContent = e.target.value;
   });
 
-  // Admin tabs
+  
   document.querySelectorAll('.admin-tab').forEach(tab => {
     tab.addEventListener('click', (e) => switchAdminTab(e.target.dataset.adminTab));
   });
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* Authentification */
-/* ─────────────────────────────────────────────────────────── */
-
 function switchAuthTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
@@ -74,7 +61,7 @@ async function handleLogin(e) {
 
     if (result.success) {
       currentUser = result.user;
-      // Sauvegarder le token et l'utilisateur
+      
       localStorage.setItem('token', result.token);
       localStorage.setItem('user', JSON.stringify(result.user));
       switchToMainScreen();
@@ -111,7 +98,7 @@ async function handleRegister(e) {
 
     if (result.success) {
       currentUser = result.user;
-      // Sauvegarder le token et l'utilisateur
+      
       localStorage.setItem('token', result.token);
       localStorage.setItem('user', JSON.stringify(result.user));
       switchToMainScreen();
@@ -142,7 +129,7 @@ function switchToMainScreen() {
   document.getElementById('auth-screen').classList.remove('active');
   document.getElementById('main-screen').classList.add('active');
 
-  // Afficher le panel admin si l'utilisateur est admin
+  
   const adminBtn = document.querySelector('[data-screen="admin"]');
   if (currentUser && currentUser.role === 'admin') {
     adminBtn.classList.remove('hidden');
@@ -150,24 +137,19 @@ function switchToMainScreen() {
     adminBtn.classList.add('hidden');
   }
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* Navigation */
-/* ─────────────────────────────────────────────────────────── */
-
 function switchScreen(screenId) {
-  // Mise à jour des onglets nav
+  
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.screen === screenId);
   });
 
-  // Affichage de l'écran
+  
   document.querySelectorAll('.content-screen').forEach(screen => {
     screen.classList.remove('active');
   });
   document.getElementById(screenId).classList.add('active');
 
-  // Actions spécifiques selon l'écran
+  
   if (screenId === 'dashboard') {
     loadDashboard();
   } else if (screenId === 'labyrinth-list') {
@@ -193,11 +175,6 @@ function switchAdminTab(tabName) {
     loadAdminLabyrinths();
   }
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* Dashboard */
-/* ─────────────────────────────────────────────────────────── */
-
 async function loadDashboard() {
   try {
     const result = await window.api.labyrinth.list(currentUser.id);
@@ -213,11 +190,6 @@ async function loadDashboard() {
     console.error('Erreur au chargement du dashboard:', error);
   }
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* Liste des labyrinthes */
-/* ─────────────────────────────────────────────────────────── */
-
 async function loadLabyrinthList() {
   const container = document.getElementById('labyrinths-container');
   
@@ -249,12 +221,12 @@ async function loadLabyrinthList() {
 async function viewLabyrinth(id) {
   try {
     const result = await window.api.labyrinth.get(id);
-    console.log('Labyrinth data:', result); // Debug
+    console.log('Labyrinth data:', result); 
     if (result.success && result.data) {
       const labyrinth = result.data;
-      console.log('Labyrinth object:', labyrinth); // Debug
+      console.log('Labyrinth object:', labyrinth); 
       
-      // Afficher dans un modal ou une nouvelle vue
+      
       const modal = document.createElement('div');
       modal.className = 'labyrinth-modal';
       modal.innerHTML = `
@@ -276,7 +248,7 @@ async function viewLabyrinth(id) {
       `;
       document.body.appendChild(modal);
       
-      // Afficher le labyrinthe
+      
       const container = modal.querySelector('#labyrinth-canvas-container');
       if (labyrinth.maze_data && labyrinth.maze_data.grid) {
         renderMaze(labyrinth.maze_data, container, 10);
@@ -301,11 +273,11 @@ async function solveLabyrinth(id) {
       if (solveResult.success && solveResult.data.solvable) {
         const solution = solveResult.data;
         
-        // Afficher la solution avec animation
+        
         const container = document.querySelector('#labyrinth-canvas-container');
         await solveLabyrinthAnimated(labyrinth.maze_data, solution, container, 10);
         
-        // Afficher les infos
+        
         const infoDiv = document.querySelector('#solution-info');
         infoDiv.innerHTML = `
           <div class="solution-info">
@@ -315,7 +287,7 @@ async function solveLabyrinth(id) {
           </div>
         `;
         
-        // Rafraîchir la liste
+        
         setTimeout(() => loadLabyrinthList(), 500);
       } else {
         const infoDiv = document.querySelector('#solution-info');
@@ -328,12 +300,12 @@ async function solveLabyrinth(id) {
   }
 }
 
-// ─── Animations pas à pas ─────────────────────────────
+
 async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) {
   const { grid, startX, startY, endX, endY, width, height } = maze;
   const { path } = solution;
 
-  // Créer le canvas
+  
   const canvas = document.createElement('canvas');
   canvas.width = width * cellSize;
   canvas.height = height * cellSize;
@@ -343,7 +315,7 @@ async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) 
 
   const ctx = canvas.getContext('2d');
 
-  // Couleurs
+  
   const colors = {
     wall: '#333',
     path: '#fff',
@@ -353,7 +325,7 @@ async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) 
     end: '#f44336'
   };
 
-  // Dessiner les murs et chemins d'abord
+  
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const cell = grid[y][x];
@@ -371,13 +343,13 @@ async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) 
   container.innerHTML = '';
   container.appendChild(canvas);
 
-  // Animation du chemin pas à pas
+  
   for (let i = 0; i < path.length; i++) {
     const [x, y] = path[i];
     const xPos = x * cellSize;
     const yPos = y * cellSize;
 
-    // Couleur selon la position
+    
     if (x === startX && y === startY) {
       ctx.fillStyle = colors.start;
     } else if (x === endX && y === endY) {
@@ -388,11 +360,11 @@ async function solveLabyrinthAnimated(maze, solution, container, cellSize = 10) 
 
     ctx.fillRect(xPos, yPos, cellSize, cellSize);
 
-    // Délai entre chaque pas
+    
     await new Promise(resolve => setTimeout(resolve, 5));
   }
 
-  // Marquer start et end clairement
+  
   ctx.fillStyle = colors.start;
   ctx.fillRect(startX * cellSize, startY * cellSize, cellSize, cellSize);
 
@@ -404,7 +376,7 @@ function renderMazeWithSolution(maze, solution, container, cellSize = 10) {
   const { grid, startX, startY, endX, endY, width, height } = maze;
   const { path } = solution;
 
-  // Créer le canvas
+  
   const canvas = document.createElement('canvas');
   canvas.width = width * cellSize;
   canvas.height = height * cellSize;
@@ -413,7 +385,7 @@ function renderMazeWithSolution(maze, solution, container, cellSize = 10) {
 
   const ctx = canvas.getContext('2d');
 
-  // Couleurs
+  
   const colors = {
     wall: '#333',
     path: '#fff',
@@ -422,14 +394,14 @@ function renderMazeWithSolution(maze, solution, container, cellSize = 10) {
     end: '#f44336'
   };
 
-  // Dessiner les cellules
+  
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const cell = grid[y][x];
       const xPos = x * cellSize;
       const yPos = y * cellSize;
 
-      // Déterminer la couleur
+      
       let color = colors.path;
       if (cell === 1) color = colors.wall;
       else if (path.some(p => p[0] === x && p[1] === y)) color = colors.solution;
@@ -439,7 +411,7 @@ function renderMazeWithSolution(maze, solution, container, cellSize = 10) {
     }
   }
 
-  // Marquer start et end
+  
   ctx.fillStyle = colors.start;
   ctx.fillRect(startX * cellSize, startY * cellSize, cellSize, cellSize);
 
@@ -467,9 +439,9 @@ async function deleteLabyrinth(id) {
   }
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* Création de labyrinthe */
-/* ─────────────────────────────────────────────────────────── */
+
+
+
 
 async function handleCreateLabyrinth(e) {
   e.preventDefault();
@@ -479,7 +451,7 @@ async function handleCreateLabyrinth(e) {
   const difficulty = parseInt(document.getElementById('maze-difficulty').value);
 
   try {
-    // Generate the maze data
+    
     const generateResult = await window.api.maze.generate(size, difficulty);
     
     if (!generateResult.success) {
@@ -536,7 +508,7 @@ async function generatePreview() {
 function renderMaze(maze, container, cellSize = 10) {
   const { grid, startX, startY, endX, endY, width, height } = maze;
 
-  // Créer le canvas
+  
   const canvas = document.createElement('canvas');
   canvas.width = width * cellSize;
   canvas.height = height * cellSize;
@@ -545,7 +517,7 @@ function renderMaze(maze, container, cellSize = 10) {
 
   const ctx = canvas.getContext('2d');
 
-  // Couleurs
+  
   const colors = {
     wall: '#333',
     path: '#fff',
@@ -553,14 +525,14 @@ function renderMaze(maze, container, cellSize = 10) {
     end: '#f44336'
   };
 
-  // Dessiner les cellules
+  
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const cell = grid[y][x];
       const xPos = x * cellSize;
       const yPos = y * cellSize;
 
-      // Déterminer la couleur
+      
       let color = colors.path;
       if (cell === 1) color = colors.wall;
       else if (x === startX && y === startY) color = colors.start;
@@ -569,14 +541,14 @@ function renderMaze(maze, container, cellSize = 10) {
       ctx.fillStyle = color;
       ctx.fillRect(xPos, yPos, cellSize, cellSize);
 
-      // Bordure légère
+      
       ctx.strokeStyle = '#ddd';
       ctx.lineWidth = 0.5;
       ctx.strokeRect(xPos, yPos, cellSize, cellSize);
     }
   }
 
-  // Marquer start et end
+  
   ctx.fillStyle = colors.start;
   ctx.fillRect(startX * cellSize, startY * cellSize, cellSize, cellSize);
   ctx.fillText('S', startX * cellSize + 3, startY * cellSize + 10);
@@ -588,7 +560,7 @@ function renderMaze(maze, container, cellSize = 10) {
   container.innerHTML = '';
   container.appendChild(canvas);
 
-  // Ajouter info
+  
   const info = document.createElement('p');
   info.style.marginTop = '10px';
   info.style.fontSize = '12px';
@@ -596,11 +568,6 @@ function renderMaze(maze, container, cellSize = 10) {
   info.innerHTML = `Labyrinthe ${maze.size} - Difficulté: ${maze.difficulty}/10<br>Taille: ${width}x${height}`;
   container.appendChild(info);
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* Admin Panel */
-/* ─────────────────────────────────────────────────────────── */
-
 async function loadAdminPanel() {
   try {
     const result = await window.api.admin.getStatistics();

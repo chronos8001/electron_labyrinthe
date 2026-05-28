@@ -1,8 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
-
-// Importation des modules d'authentification et base de données
 const Database = require('./src/database');
 const Auth = require('./src/auth');
 const Labyrinth = require('./src/labyrinth');
@@ -11,7 +9,6 @@ let mainWindow;
 let db;
 let auth;
 
-// ─── Créer la fenêtre principale ─────────────────────────
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -28,16 +25,12 @@ function createWindow() {
 
   mainWindow.loadFile('renderer/index.html');
 
-  // Menu
   createMenu();
 
-  // DevTools en développement
   if (process.env.NODE_ENV === 'development') {
     mainWindow.webContents.openDevTools();
   }
 }
-
-// ─── Créer le menu ──────────────────────────────────────
 function createMenu() {
   const template = [
     {
@@ -75,7 +68,7 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-// ─── IPC : Authentification ────────────────────────────
+
 ipcMain.handle('auth:login', async (event, credentials) => {
   try {
     const result = await auth.login(credentials.username, credentials.password);
@@ -94,7 +87,7 @@ ipcMain.handle('auth:register', async (event, userData) => {
   }
 });
 
-// ─── IPC : Labyrinthes (CRUD) ──────────────────────────
+
 ipcMain.handle('labyrinth:create', async (event, data) => {
   try {
     const result = await db.createLabyrinth(
@@ -146,7 +139,7 @@ ipcMain.handle('labyrinth:delete', async (event, id) => {
   }
 });
 
-// ─── IPC : Génération & Résolution ──────────────────────
+
 ipcMain.handle('labyrinth:generate', async (event, options) => {
   try {
     const maze = Labyrinth.generate(options.size, options.difficulty);
@@ -160,7 +153,7 @@ ipcMain.handle('labyrinth:solve', async (event, labyrinthId, maze) => {
   try {
     const solution = Labyrinth.solve(maze);
     
-    // Mark labyrinth as solved
+    
     if (labyrinthId) {
       await db.markLabyrinthAsSolved(labyrinthId);
     }
@@ -171,7 +164,7 @@ ipcMain.handle('labyrinth:solve', async (event, labyrinthId, maze) => {
   }
 });
 
-// ─── IPC : Admin ────────────────────────────────────────
+
 ipcMain.handle('admin:getStatistics', async (event) => {
   try {
     const stats = await db.getDetailedStatistics();
@@ -217,7 +210,7 @@ ipcMain.handle('admin:deleteLabyrinth', async (event, labyrinthId) => {
   }
 });
 
-// ─── IPC : Export/Import ───────────────────────────────
+
 ipcMain.handle('labyrinth:export', async (event, labyrinthId) => {
   try {
     const labyrinth = await db.getLabyrinthById(labyrinthId);
@@ -234,7 +227,7 @@ ipcMain.handle('labyrinth:import', async (event, userId, importData) => {
   try {
     const imported = JSON.parse(importData);
     
-    // Validation basique
+    
     if (!imported.name || !imported.size || imported.difficulty === undefined) {
       return { success: false, message: 'Format d\'import invalide' };
     }
@@ -253,9 +246,9 @@ ipcMain.handle('labyrinth:import', async (event, userId, importData) => {
   }
 });
 
-// ─── Cycle de vie de l'app ──────────────────────────────
+
 app.on('ready', async () => {
-  // Initialiser la base de données
+  
   try {
     db = new Database();
     await db.initialize();
@@ -283,7 +276,7 @@ app.on('activate', () => {
   }
 });
 
-// Gestion des erreurs
+
 process.on('uncaughtException', (error) => {
   console.error('Erreur non gérée:', error);
 });

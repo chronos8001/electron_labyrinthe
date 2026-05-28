@@ -1,19 +1,14 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-/**
- * Database class - Manages SQLite database operations
- * Handles user management and labyrinth storage
- */
+
 class Database {
   constructor(dbPath = null) {
-    // Store database at user's app data folder, or use provided path
     if (!dbPath) {
       try {
         const { app } = require('electron');
         dbPath = path.join(app.getPath('userData'), 'labyrinthe.db');
       } catch (e) {
-        // Fallback if Electron is not available (e.g., during testing)
         dbPath = path.join(__dirname, '../test-db/labyrinthe.db');
       }
     }
@@ -21,9 +16,7 @@ class Database {
     console.log(`Database path: ${dbPath}`);
   }
 
-  /**
-   * Promise wrapper for db.run (INSERT, UPDATE, DELETE)
-   */
+  
   run(sql, params = []) {
     return new Promise((resolve, reject) => {
       this.db.run(sql, params, function(err) {
@@ -33,9 +26,7 @@ class Database {
     });
   }
 
-  /**
-   * Promise wrapper for db.get (SELECT single row)
-   */
+  
   get(sql, params = []) {
     return new Promise((resolve, reject) => {
       this.db.get(sql, params, (err, row) => {
@@ -45,9 +36,7 @@ class Database {
     });
   }
 
-  /**
-   * Promise wrapper for db.all (SELECT multiple rows)
-   */
+  
   all(sql, params = []) {
     return new Promise((resolve, reject) => {
       this.db.all(sql, params, (err, rows) => {
@@ -57,15 +46,11 @@ class Database {
     });
   }
 
-  /**
-   * Initialize database tables
-   * Creates users and labyrinths tables if they don't exist
-   */
+  
   async initialize() {
     try {
       console.log('Initializing database...');
 
-      // Create users table
       await this.run(`
         CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,7 +62,6 @@ class Database {
       `);
       console.log('✓ Users table created');
 
-      // Create labyrinths table
       await this.run(`
         CREATE TABLE IF NOT EXISTS labyrinths (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,15 +78,12 @@ class Database {
       `);
       console.log('✓ Labyrinths table created');
       
-      // Add solved column if it doesn't exist (migration for existing databases)
       try {
         await this.run('ALTER TABLE labyrinths ADD COLUMN solved INTEGER DEFAULT 0');
         console.log('✓ Added solved column to labyrinths');
       } catch (e) {
-        // Column already exists, ignore error
       }
 
-      // Create default admin user if not exists
       const admin = await this.get('SELECT * FROM users WHERE username = ?', ['admin']);
       if (!admin) {
         const bcrypt = require('bcryptjs');
@@ -124,16 +105,8 @@ class Database {
     }
   }
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // USER OPERATIONS
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  /**
-   * Create a new user
-   * @param {string} username - Username
-   * @param {string} hashedPassword - Bcrypt hashed password
-   * @param {number} isAdmin - 0 for user, 1 for admin
-   */
+  
   async createUser(username, hashedPassword, isAdmin = 0) {
     try {
       const userId = await this.run(
@@ -148,10 +121,7 @@ class Database {
     }
   }
 
-  /**
-   * Get user by username
-   * @param {string} username - Username to find
-   */
+  
   async getUserByUsername(username) {
     try {
       const user = await this.get('SELECT * FROM users WHERE username = ?', [username]);
@@ -162,10 +132,7 @@ class Database {
     }
   }
 
-  /**
-   * Get user by ID (without password)
-   * @param {number} userId - User ID
-   */
+  
   async getUserById(userId) {
     try {
       const user = await this.get(
@@ -179,9 +146,7 @@ class Database {
     }
   }
 
-  /**
-   * Get all users (without passwords)
-   */
+  
   async getAllUsers() {
     try {
       const users = await this.all(
@@ -194,10 +159,7 @@ class Database {
     }
   }
 
-  /**
-   * Delete user and all their labyrinths
-   * @param {number} userId - User ID to delete
-   */
+  
   async deleteUser(userId) {
     try {
       await this.run('DELETE FROM users WHERE id = ?', [userId]);
@@ -209,11 +171,7 @@ class Database {
     }
   }
 
-  /**
-   * Update user role
-   * @param {number} userId - User ID
-   * @param {number} isAdmin - 0 for user, 1 for admin
-   */
+  
   async updateUserRole(userId, isAdmin) {
     try {
       await this.run('UPDATE users SET is_admin = ? WHERE id = ?', [isAdmin, userId]);
@@ -225,18 +183,8 @@ class Database {
     }
   }
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // LABYRINTH OPERATIONS
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  /**
-   * Create a new labyrinth
-   * @param {number} userId - User ID (owner)
-   * @param {string} name - Labyrinth name
-   * @param {string} size - Size (small, medium, large)
-   * @param {number} difficulty - Difficulty level (1-10)
-   * @param {object} mazeData - Maze data object (will be stored as JSON)
-   */
+  
   async createLabyrinth(userId, name, size, difficulty, mazeData) {
     try {
       const labyrinthId = await this.run(
@@ -251,10 +199,7 @@ class Database {
     }
   }
 
-  /**
-   * Get all labyrinths for a user
-   * @param {number} userId - User ID
-   */
+  
   async getUserLabyrinths(userId) {
     try {
       const labyrinths = await this.all(
@@ -271,10 +216,7 @@ class Database {
     }
   }
 
-  /**
-   * Get labyrinth by ID (includes maze data)
-   * @param {number} labyrinthId - Labyrinth ID
-   */
+  
   async getLabyrinthById(labyrinthId) {
     try {
       const labyrinth = await this.get(
@@ -291,9 +233,7 @@ class Database {
     }
   }
 
-  /**
-   * Get all labyrinths (for admin)
-   */
+  
   async getAllLabyrinths() {
     try {
       const labyrinths = await this.all(
@@ -309,11 +249,7 @@ class Database {
     }
   }
 
-  /**
-   * Update labyrinth
-   * @param {number} labyrinthId - Labyrinth ID
-   * @param {object} updates - Object with fields to update
-   */
+  
   async markLabyrinthAsSolved(labyrinthId) {
     try {
       await this.run(
@@ -356,10 +292,7 @@ class Database {
     }
   }
 
-  /**
-   * Delete labyrinth
-   * @param {number} labyrinthId - Labyrinth ID
-   */
+  
   async deleteLabyrinth(labyrinthId) {
     try {
       await this.run('DELETE FROM labyrinths WHERE id = ?', [labyrinthId]);
@@ -371,13 +304,8 @@ class Database {
     }
   }
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // STATISTICS
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  /**
-   * Get database statistics
-   */
+  
   async getStatistics() {
     try {
       const userCount = await this.get('SELECT COUNT(*) as count FROM users');
@@ -400,19 +328,15 @@ class Database {
     }
   }
 
-  /**
-   * Get detailed statistics for admin dashboard
-   */
+  
   async getDetailedStatistics() {
     try {
       const stats = await this.getStatistics();
 
-      // Get difficulty distribution
       const difficultyDistribution = await this.all(
         'SELECT difficulty, COUNT(*) as count FROM labyrinths GROUP BY difficulty'
       );
 
-      // Get size distribution
       const sizeDistribution = await this.all(
         'SELECT size, COUNT(*) as count FROM labyrinths GROUP BY size'
       );
@@ -428,13 +352,8 @@ class Database {
     }
   }
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // DATABASE MAINTENANCE
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  /**
-   * Close database connection
-   */
+  
   close() {
     return new Promise((resolve, reject) => {
       this.db.close((err) => {
@@ -447,9 +366,7 @@ class Database {
     });
   }
 
-  /**
-   * Get database info
-   */
+  
   async getDatabaseInfo() {
     try {
       const userCount = await this.get('SELECT COUNT(*) as count FROM users');

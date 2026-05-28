@@ -1,8 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
-
-// Expose une API sécurisée au renderer process
-contextBridge.exposeInMainWorld('api', {
-  // ─── Authentification ─────────────────────
+contextBridge.exposeInMainWorld('api', { 
   auth: {
     login: (username, password) => 
       ipcRenderer.invoke('auth:login', { username, password }),
@@ -10,7 +7,7 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('auth:register', { username, password, email })
   },
 
-  // ─── Labyrinthes (CRUD) ──────────────────
+  
   labyrinth: {
     create: (data) => 
       ipcRenderer.invoke('labyrinth:create', data),
@@ -24,7 +21,7 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('labyrinth:delete', id)
   },
 
-  // ─── Génération & Résolution ──────────────
+  
   maze: {
     generate: (size, difficulty) => 
       ipcRenderer.invoke('labyrinth:generate', { size, difficulty }),
@@ -32,7 +29,7 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('labyrinth:solve', labyrinthId, maze)
   },
 
-  // ─── Admin ────────────────────────────────
+  
   admin: {
     getStatistics: () => 
       ipcRenderer.invoke('admin:getStatistics'),
@@ -46,7 +43,7 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('admin:deleteLabyrinth', labyrinthId)
   },
 
-  // ─── Export/Import ────────────────────────
+  
   export: {
     labyrinth: (labyrinthId) => 
       ipcRenderer.invoke('labyrinth:export', labyrinthId)
@@ -56,7 +53,7 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('labyrinth:import', userId, data)
   },
 
-  // ─── Événements du renderer ───────────────
+  
   onNotification: (callback) => 
     ipcRenderer.on('notification', (event, data) => callback(data)),
   onLabyrinthCreated: (callback) => 
