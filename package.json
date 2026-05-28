@@ -18,11 +18,13 @@
     "electron-builder": "^24.6.0"
   },
   "dependencies": {
-    "sqlite3": "^5.1.6",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.0"
+    "build-tools": "github:electron/build-tools",
+    "jsonwebtoken": "^9.0.0",
+    "sqlite3": "^5.1.6"
   },
   "build": {
+    "npmRebuild": false,
     "appId": "com.electron.labyrinthe",
     "productName": "Electron Labyrinthe",
     "files": [
